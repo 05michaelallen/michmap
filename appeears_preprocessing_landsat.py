@@ -10,7 +10,6 @@ import rasterio as rio
 import os
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
@@ -49,30 +48,14 @@ fn = np.unique(qa['yeardoy'])
 
 # initialize bands
 bands = [
-    #'SRB1', 
-    #'SRB2', 
-    #'SRB3', 
+    'SRB1', 
+    'SRB2', 
+    'SRB3', 
     'SRB4', 
     'SRB5', 
-    #'SRB6', 
-    #'SRB7'
+    'SRB6', 
+    'SRB7'
     ]
-
-# for f in fn:
-#     print(datetime.now())
-#     print("file: " + str(f))
-#     # import pixelqa
-#     px_qa_f = rio.open("../data/2017/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
-#     px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(int)
-#     # import bands
-#     d = []
-#     for b in bands:
-#         bf = rio.open("../data/2017/CU_LC08.001_" + b + "_doy" + str(f) + "_aid0001.tif").read()/scalefactor
-#         bfm = bf * px_qa_fm
-#         bfm[bfm <= 0] = 0
-#         bfm[bfm >= 1] = 1
-#         d.append(bfm)
-
 # =============================================================================
 # compute band means from all images
 # =============================================================================
@@ -111,16 +94,31 @@ for b in range(len(bands)):
 # tag nodata
 image_mean[image_mean <= 0] = np.nan
 
-
 # update metadata
 image_meta = image_meta.copy()
 image_meta.update({'count': len(bands),
                    'nodata': -999,
                    'dtype': 'float64'})
 # output
-with rio.open("../data/2017.tif", 'w', **image_meta) as dst:
+with rio.open("../data/2017_2.tif", 'w', **image_meta) as dst:
     dst.write(image_mean)
-
-
-p = plt.imshow(image_mean[0], vmin = 0, vmax = 0.3)
-plt.colorbar(p)
+    
+    
+# =============================================================================
+# TESTER
+# =============================================================================
+badfn = []
+for f in fn:
+    print(datetime.now())
+    print("file: " + str(f))
+    # import pixelqa
+    px_qa_f = rio.open("../data/2017/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
+    # import selected bands for fn
+    for b in range(len(bands)):
+        print("band: " + bands[b])
+        try:
+            bf = rio.open("../data/2017/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
+        except:
+            badfn.append(str(f) + "_" + bands[b])
+            print("bad band")
+            pass # doing nothing on exception
