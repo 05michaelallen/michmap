@@ -79,7 +79,7 @@ bands = [
 image_sum = np.zeros([len(bands), image_meta['height'], image_meta['width']])
 image_count = np.zeros([len(bands), image_meta['height'], image_meta['width']], dtype = np.int16)
 
-for f in fn[0:3]:
+for f in fn:
     print(datetime.now())
     print("file: " + str(f))
     # import pixelqa
@@ -95,11 +95,32 @@ for f in fn[0:3]:
         bfm[bfm <= 0] = 0
         bfm[bfm >= 1] = 1
         # add to image sum
-        image_sum[b,:,:] = image_sum + bfm
+        image_sum[b,:,:] = image_sum[b,:,:] + bfm
         # add to image count
         px_qa_fm_count = px_qa_fm.copy()
         px_qa_fm_count[px_qa_fm_count > 0] = 1
-        image_count[b,:,:] = image_count + px_qa_fm_count
-        
+        image_count[b,:,:] = image_count[b,:,:] + px_qa_fm_count
 print(datetime.now())
 print("import done")
+
+### take average
+image_mean = np.zeros([len(bands), image_meta['height'], image_meta['width']])
+for b in range(len(bands)):
+    image_mean[b,:,:] = image_sum[b,:,:]/image_count[b,:,:]
+
+# tag nodata
+image_mean[image_mean <= 0] = np.nan
+
+
+# update metadata
+image_meta = image_meta.copy()
+image_meta.update({'count': len(bands),
+                   'nodata': -999,
+                   'dtype': 'float64'})
+# output
+with rio.open("../data/2017.tif", 'w', **image_meta) as dst:
+    dst.write(image_mean)
+
+
+p = plt.imshow(image_mean[0], vmin = 0, vmax = 0.3)
+plt.colorbar(p)
