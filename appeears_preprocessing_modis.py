@@ -16,14 +16,16 @@ import matplotlib.pyplot as plt
 os.chdir("/Volumes/ellwood/michmap/code")
 
 clear_threshold = 1600000
+scalefactor = 10000
+yearf = '2020m'
 
 # =============================================================================
 # import and 
 # =============================================================================
 # import metadata
-meta = pd.read_csv("../data/2020/CU-LC08-001-Statistics.csv")
-qa = pd.read_csv("../data/2020/CU-LC08-001-PIXELQA-Statistics-QA.csv")
-qa_lookup = pd.read_csv("../data/2020/CU-LC08-001-PIXELQA-lookup.csv")
+meta = pd.read_csv("../data/" + yearf + "/CU-LC08-001-Statistics.csv")
+qa = pd.read_csv("../data/" + yearf + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
+qa_lookup = pd.read_csv("../data/" + yearf + "/CU-LC08-001-PIXELQA-lookup.csv")
 
 # list clear values
 qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
@@ -43,19 +45,24 @@ qa = qa.sort_values(by = 'yeardoy')
 fn = np.unique(qa['yeardoy'])
 
 # initialize bands
-bands = ['SRB1', 'SRB2', 'SRB3', 'SRB4', 'SRB5', 'SRB6', 'SRB7']
+bands = [
+    #'SRB1', 
+    #'SRB2', 
+    #'SRB3', 
+    'SRB4', 
+    #'SRB5', 
+    #'SRB6', 
+    #'SRB7'
+    ]
 for f in fn:
     # import pixelqa
-    px_qa_f = rio.open("../data/2020/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
+    px_qa_f = rio.open("../data/" + yearf + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
     px_qa_fm = np.isin(px_qa_f, qa_clear_values)
     # import bands
     d = []
     for b in bands:
-        bf = rio.open("../data/2020/CU_LC08.001_" + b + "_doy" + str(f) + "_aid0001.tif").read()
-        d.append(bf * px_qa_fm)
-        
-        
-        
-        
-        
-    
+        bf = rio.open("../data/" + yearf + "/CU_LC08.001_" + b + "_doy" + str(f) + "_aid0001.tif").read()
+        bfm = (bf/scalefactor) * px_qa_fm
+        bfm[bfm <= 0] = np.nan
+        bfm[bfm >= 1] = 1
+        d.append(bfm)
