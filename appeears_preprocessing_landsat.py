@@ -50,8 +50,8 @@ image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[
 # update metadata
 image_meta = image_meta.copy()
 image_meta.update({'count': 1,
-                   'nodata': 0,
-                   'dtype': 'int16'})
+                   'nodata': -9999,
+                   'dtype': 'int32'})
 
 # initialize bands
 bands = [
@@ -69,7 +69,6 @@ bands = [
 # reassigns bad values
 # take mean per-pixel reflectance (via per-pixel sum/count)
 # outputs as year_SRBx.tif
-
 for b in range(len(bands)):
     print(datetime.now())
     print("band: " + bands[b])
@@ -78,31 +77,31 @@ for b in range(len(bands)):
     image_sum = np.zeros([1, image_meta['height'], image_meta['width']])
     image_count = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.int16)
     image_mean = np.zeros([1, image_meta['height'], image_meta['width']])
-    for f in fn[:3]:
+    for f in fn:
         print("file: " + str(f))
         # import pixel quality flags
         px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
-        px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(int) # convert to boolean, good values = True
-        # import band
-        bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
+        px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int32) # convert to boolean and then to int, good values = 1
+        # import surface reflectance band
+        bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float64)
         # apply qa mask
         bfm = bf * px_qa_fm
         # reissue bad values
-        bfm[bfm < 0] = 0
+        bfm[bfm < 0] = 0 # this means that we aren't changing the values of no data and bad retrievals (on the low end)
         bfm[bfm > scalefactor] = scalefactor
         # add to image sum
-        image_sum[b,:,:] = image_sum[b,:,:] + bfm
+        image_sum = image_sum + bfm
         # add to image count
         px_qa_fm_count = px_qa_fm.copy()
         px_qa_fm_count[px_qa_fm_count > 0] = 1
-        image_count[b,:,:] = image_count[b,:,:] + px_qa_fm_count
+        image_count = image_count + px_qa_fm_count
     # take average
     image_mean[b,:,:] = image_sum[b,:,:]/image_count[b,:,:]
     # tag nodata
-    image_mean[image_mean < 0] = 0
+    image_mean[image_mean <= 0] = -9999
     # output
     with rio.open("../data/" + str(year) + "_" + bands[b] + ".tif", 'w', **image_meta) as dst:
-        dst.write(image_mean.astype(np.int16))
+        dst.write(image_mean.astype(np.int32))
         
 print(datetime.now())
-print("import done")
+print("finshed")
