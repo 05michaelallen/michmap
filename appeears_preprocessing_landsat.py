@@ -13,10 +13,9 @@ import pandas as pd
 from datetime import datetime
 
 os.chdir("/Volumes/ellwood/michmap/code")
-flag_TESTER = True
 clear_threshold = 1600000
 scalefactor = 10000
-year = 2017
+year = 2016
 
 # =============================================================================
 # import and initialize
@@ -51,8 +50,8 @@ image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[
 # update metadata
 image_meta = image_meta.copy()
 image_meta.update({'count': 1,
-                   'nodata': -999,
-                   'dtype': 'float64'})
+                   'nodata': 0,
+                   'dtype': 'int16'})
 
 # initialize bands
 bands = [
@@ -73,13 +72,13 @@ bands = [
 
 for b in range(len(bands)):
     print(datetime.now())
-    print("band: " + b)
+    print("band: " + bands[b])
+    print("__________________________________________________________________")
     # initialize arrays
     image_sum = np.zeros([1, image_meta['height'], image_meta['width']])
     image_count = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.int16)
     image_mean = np.zeros([1, image_meta['height'], image_meta['width']])
-    for f in fn:
-        print(datetime.now())
+    for f in fn[:3]:
         print("file: " + str(f))
         # import pixel quality flags
         px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
@@ -89,45 +88,21 @@ for b in range(len(bands)):
         # apply qa mask
         bfm = bf * px_qa_fm
         # reissue bad values
-        bfm[bfm <= 0] = 0
-        bfm[bfm >= scalefactor] = scalefactor
+        bfm[bfm < 0] = 0
+        bfm[bfm > scalefactor] = scalefactor
         # add to image sum
         image_sum[b,:,:] = image_sum[b,:,:] + bfm
         # add to image count
         px_qa_fm_count = px_qa_fm.copy()
         px_qa_fm_count[px_qa_fm_count > 0] = 1
         image_count[b,:,:] = image_count[b,:,:] + px_qa_fm_count
-        # take average
-        image_mean[b,:,:] = image_sum[b,:,:]/image_count[b,:,:]
-        # tag nodata
-        image_mean[image_mean <= 0] = np.nan
-        # output
-        with rio.open("../data/" + str(year) + "_" + b + ".tif", 'w', **image_meta) as dst:
-            dst.write(image_mean)
+    # take average
+    image_mean[b,:,:] = image_sum[b,:,:]/image_count[b,:,:]
+    # tag nodata
+    image_mean[image_mean < 0] = 0
+    # output
+    with rio.open("../data/" + str(year) + "_" + bands[b] + ".tif", 'w', **image_meta) as dst:
+        dst.write(image_mean.astype(np.int16))
         
 print(datetime.now())
 print("import done")
-
-    
-# =============================================================================
-# TESTER
-# =============================================================================
-if flag_TESTER:    
-    badfn = []
-    for f in fn:
-        print(datetime.now())
-        print("file: " + str(f))
-        # import pixelqa
-        px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
-        # import selected bands for fn
-        for b in range(len(bands)):
-            print("band: " + bands[b])
-            try:
-                bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
-            except:
-                badfn.append(str(f) + "_" + bands[b])
-                print("bad band")
-                pass # doing nothing on exception
-                
-    bad_fndf = pd.DataFrame(badfn)
-    bad_fndf.to_csv("../data/" + str(year) + "/badfn.csv")
