@@ -10,17 +10,16 @@ import rasterio as rio
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
 
 os.chdir("/Volumes/ellwood/michmap/code")
-
+flag_TESTER = False
 clear_threshold = 1600000
 scalefactor = 10000
 year = 2016
 
 # =============================================================================
-# import and 
+# import and initialize
 # =============================================================================
 # import metadata
 meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
@@ -51,11 +50,11 @@ fn = np.unique(qa['yeardoy'])
 bands = [
     'SRB1', 
     'SRB2', 
-    #'SRB3', 
-    #'SRB4', 
-    #'SRB5', 
-    #'SRB6', 
-    #'SRB7'
+    'SRB3', 
+    'SRB4', 
+    'SRB5', 
+    'SRB6', 
+    'SRB7'
     ]
 # =============================================================================
 # compute band means from all images
@@ -101,24 +100,28 @@ image_meta.update({'count': len(bands),
                    'nodata': -999,
                    'dtype': 'float64'})
 # output
-with rio.open("../data/str(year)_2.tif", 'w', **image_meta) as dst:
+with rio.open("../data/" + str(year) + ".tif", 'w', **image_meta) as dst:
     dst.write(image_mean)
     
 # =============================================================================
 # TESTER
 # =============================================================================
-badfn = []
-for f in fn:
-    print(datetime.now())
-    print("file: " + str(f))
-    # import pixelqa
-    px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
-    # import selected bands for fn
-    for b in range(len(bands)):
-        print("band: " + bands[b])
-        try:
-            bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
-        except:
-            badfn.append(str(f) + "_" + bands[b])
-            print("bad band")
-            pass # doing nothing on exception
+if flag_TESTER:    
+    badfn = []
+    for f in fn:
+        print(datetime.now())
+        print("file: " + str(f))
+        # import pixelqa
+        px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
+        # import selected bands for fn
+        for b in range(len(bands)):
+            print("band: " + bands[b])
+            try:
+                bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
+            except:
+                badfn.append(str(f) + "_" + bands[b])
+                print("bad band")
+                pass # doing nothing on exception
+                
+    bad_fndf = pd.DataFrame(badfn)
+    bad_fndf.to_csv("../data/" + str(year) + "/badfn.csv")
