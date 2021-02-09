@@ -14,7 +14,7 @@ from datetime import datetime
 
 os.chdir("/Volumes/ellwood/michmap/code")
 clear_threshold = 1600000
-year = 2016
+year = 2017
 
 
 # import metadata

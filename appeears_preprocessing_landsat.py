@@ -46,12 +46,12 @@ fn = np.unique(qa['yeardoy'])
 # compute band means from all images
 # =============================================================================
 # import reference image metadata
-image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[1]) + "_aid0001.tif").meta
+image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[0]) + "_aid0001.tif").meta
 # update metadata
 image_meta = image_meta.copy()
 image_meta.update({'count': 1,
                    'nodata': -9999,
-                   'dtype': 'int32'})
+                   'dtype': 'float64'})
 
 # initialize bands
 bands = [
@@ -69,6 +69,11 @@ bands = [
 # reassigns bad values
 # take mean per-pixel reflectance (via per-pixel sum/count)
 # outputs as year_SRBx.tif
+
+# note: this setup allows for single band processing, so we process the pixel qa
+# for each band (which is unnecessary). can optimize by swapping the order
+# of processing. 
+
 for b in range(len(bands)):
     print(datetime.now())
     print("band: " + bands[b])
@@ -81,27 +86,27 @@ for b in range(len(bands)):
         print("file: " + str(f))
         # import pixel quality flags
         px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
-        px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int32) # convert to boolean and then to int, good values = 1
+        px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int32) # convert to boolean and then to float, good values = 1
         # import surface reflectance band
         bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float64)
+        # reassign reflectances outside of range bad values
+        bf[bf < 0] = 1 
+        bf[bf > scalefactor] = scalefactor
         # apply qa mask
         bfm = bf * px_qa_fm
-        # reissue bad values
-        bfm[bfm < 0] = 0 # this means that we aren't changing the values of no data and bad retrievals (on the low end)
-        bfm[bfm > scalefactor] = scalefactor
         # add to image sum
         image_sum = image_sum + bfm
         # add to image count
         px_qa_fm_count = px_qa_fm.copy()
         px_qa_fm_count[px_qa_fm_count > 0] = 1
         image_count = image_count + px_qa_fm_count
-    # take average
-    image_mean[b,:,:] = image_sum[b,:,:]/image_count[b,:,:]
+    # take average, apply scale factor
+    image_mean = (image_sum/image_count)/scalefactor
     # tag nodata
     image_mean[image_mean <= 0] = -9999
     # output
     with rio.open("../data/" + str(year) + "_" + bands[b] + ".tif", 'w', **image_meta) as dst:
-        dst.write(image_mean.astype(np.int32))
+        dst.write(image_mean.astype(np.float64))
         
 print(datetime.now())
 print("finshed")
