@@ -10,25 +10,32 @@ import os
 import requests
 import time
 import cgi
+import json
 
 # =============================================================================
 # set parameters
 # =============================================================================
 # define and set wd
 wd = "/Volumes/ellwood/michmap/code/"
+wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 # path to api
 API = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/' 
 # set task id (from request JSON)
 # note: can also pair this with api data request, can pull tast_id straight from 
 # data request
-task_id = '365f4241-7afe-47c7-b002-6ea3421fc259'
+year = 2018
+# import json
+req_params = open("../data/" + str(year) + "/mimap-" + str(year) + "-request.json")
+req_params = json.loads(req_params.read())
+# get task id
+task_id = req_params['task_id']
 
 # =============================================================================
-# login, get task statys
+# login, get task status
 # =============================================================================
 # insert api authorization, call login service, provide credentials, and return json
-login_response = requests.post(f"{API}/login", auth = ('mallen85', '!Lesson982')).json()
+login_response = requests.post(f"{API}/login", auth = ('user', 'password')).json()
 
 # assign the token to a variable
 token = login_response['token']
@@ -54,7 +61,7 @@ for f in bundle['files']:
     files[f['file_id']] = f['file_name']
 
 # set up output directory
-outfn = '../data/2016/'
+outfn = '../data/' + year + "/"
 if not os.path.exists(outfn):
     os.makedirs(outfn)
 

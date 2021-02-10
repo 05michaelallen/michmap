@@ -14,13 +14,12 @@ from datetime import datetime
 
 #os.chdir("/Volumes/ellwood/michmap/code")
 os.chdir("/home/vegveg/michmap/michmap/")
-clear_threshold = 1600000
+clear_threshold = 0
 scalefactor = 10000
-year = 2016
-years = [2016]
+years = [2017]
 # initialize bands
 bands = [
-    #'SRB1', 
+    'SRB1', 
     'SRB2', 
     'SRB3', 
     'SRB4', 
@@ -28,7 +27,6 @@ bands = [
     'SRB6', 
     'SRB7'
     ]
-    
 
 for year in years:
     # =============================================================================
