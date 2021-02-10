@@ -12,9 +12,10 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-os.chdir("/Volumes/ellwood/michmap/code")
+#os.chdir("/Volumes/ellwood/michmap/code")
+os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 1600000
-year = 2017
+year = 2018
 
 
 # import metadata

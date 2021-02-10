@@ -12,11 +12,24 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-os.chdir("/Volumes/ellwood/michmap/code")
+#os.chdir("/Volumes/ellwood/michmap/code")
+os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 1600000
 scalefactor = 10000
 year = 2016
 years = [2016]
+# initialize bands
+bands = [
+    #'SRB1', 
+    'SRB2', 
+    'SRB3', 
+    'SRB4', 
+    'SRB5', 
+    'SRB6', 
+    'SRB7'
+    ]
+    
+
 for year in years:
     # =============================================================================
     # import and initialize
@@ -52,18 +65,7 @@ for year in years:
     image_meta = image_meta.copy()
     image_meta.update({'count': 1,
                        'nodata': -9999,
-                       'dtype': 'float64'})
-    
-    # initialize bands
-    bands = [
-        #'SRB1', 
-        'SRB2', 
-        'SRB3', 
-        'SRB4', 
-        'SRB5', 
-        #'SRB6', 
-        #'SRB7'
-        ]
+                       'dtype': 'float32'})
     
     ### this loop runs through each band's files and does the following
     # masks for non-clear values using pixel qa
@@ -74,22 +76,21 @@ for year in years:
     # note: this setup allows for single band processing, so we process the pixel qa
     # for each band (which is unnecessary). can optimize by swapping the order
     # of processing. 
-    
     for b in range(len(bands)):
         print(datetime.now())
         print("band: " + bands[b])
         print("__________________________________________________________________")
         # initialize arrays
-        image_sum = np.zeros([1, image_meta['height'], image_meta['width']])
+        image_sum = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.float32)
         image_count = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.int16)
-        image_mean = np.zeros([1, image_meta['height'], image_meta['width']])
-        for f in fn[36:]:
+        image_mean = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.float32)
+        for f in fn:
             print("file: " + str(f))
             # import pixel quality flags
             px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
-            px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int32) # convert to boolean and then to float, good values = 1
+            px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
             # import surface reflectance band
-            bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float64)
+            bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
             # reassign reflectances outside of range bad values
             bf[bf < 0] = 1 
             bf[bf > scalefactor] = scalefactor
@@ -102,7 +103,7 @@ for year in years:
             px_qa_fm_count[px_qa_fm_count > 0] = 1
             image_count = image_count + px_qa_fm_count
         # take average, apply scale factor
-        image_mean = ((image_sum/image_count)/scalefactor).astype(np.float64)
+        image_mean = ((image_sum/image_count)/scalefactor).astype(np.float32)
         # tag nodata
         image_mean[image_mean <= 0] = -9999
         # output
