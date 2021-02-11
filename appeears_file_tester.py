@@ -15,7 +15,7 @@ from datetime import datetime
 #os.chdir("/Volumes/ellwood/michmap/code")
 os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 0
-year = 2018
+year = 2015
 
 # import metadata
 meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")

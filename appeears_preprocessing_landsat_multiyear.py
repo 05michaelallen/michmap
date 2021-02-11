@@ -16,7 +16,7 @@ from datetime import datetime
 os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 0
 scalefactor = 10000
-years = [2018]
+years = [2017]
 # initialize bands
 bands = [
     'SRB1', 

@@ -11,12 +11,13 @@ import requests
 import time
 import cgi
 import json
+import getpass
 
 # =============================================================================
 # set parameters
 # =============================================================================
 # define and set wd
-wd = "/Volumes/ellwood/michmap/code/"
+#wd = "/Volumes/ellwood/michmap/code/"
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 # path to api
@@ -35,8 +36,8 @@ task_id = req_params['task_id']
 # login, get task status
 # =============================================================================
 # insert api authorization, call login service, provide credentials, and return json
-u = input("username: ")
-p = input("password: ")
+u = getpass.getpass(prompt = 'Enter NASA Earthdata Login Username: ')
+p = getpass.getpass(prompt = 'Enter NASA Earthdata Login Password: ')
 login_response = requests.post(f"{API}/login", auth = (u, p)).json()
 del u, p
 
