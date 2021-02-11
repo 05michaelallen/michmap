@@ -35,7 +35,10 @@ task_id = req_params['task_id']
 # login, get task status
 # =============================================================================
 # insert api authorization, call login service, provide credentials, and return json
-login_response = requests.post(f"{API}/login", auth = ('user', 'password')).json()
+u = input("username: ")
+p = input("password: ")
+login_response = requests.post(f"{API}/login", auth = (u, p)).json()
+del u, p
 
 # assign the token to a variable
 token = login_response['token']
@@ -61,9 +64,7 @@ for f in bundle['files']:
     files[f['file_id']] = f['file_name']
 
 # set up output directory
-outfn = '../data/' + year + "/"
-if not os.path.exists(outfn):
-    os.makedirs(outfn)
+outfn = '../data/' + str(year) + "/"
 
 # =============================================================================
 # loop to download each file in files dict
