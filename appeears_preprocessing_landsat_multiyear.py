@@ -15,8 +15,9 @@ from datetime import datetime
 #os.chdir("/Volumes/ellwood/michmap/code")
 os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 0
+flag_MANUALDROPS = True
 scalefactor = 10000
-years = [2017]
+years = [2018]
 # initialize bands
 bands = [
     'SRB1', 
@@ -38,7 +39,8 @@ for year in years:
     qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-lookup.csv")
     
     # list clear values
-    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
+    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & 
+                                (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
     qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
     
     # filter for good (non cloud values)
@@ -53,6 +55,13 @@ for year in years:
     
     # find unique doys
     fn = np.unique(qa['yeardoy'])
+    
+    # filter manual drops (these were manually inspected and found to have bad
+    # cloud/aerosol detection)
+    if flag_MANUALDROPS:
+        manualdrops = pd.read_csv("../data/" + str(year) + "/manual_drops.csv").values
+        for d in manualdrops:
+            fn = [v for v in fn if v != d]
     
     # =============================================================================
     # compute band means from all images

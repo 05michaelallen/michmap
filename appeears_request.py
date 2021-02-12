@@ -18,9 +18,9 @@ api = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/'
 
 ### parameters
 # year of interest
-year = 2017
+year = 2014
 # name the task
-task_name = 'michmap_v2_2017'
+task_name = 'michmap_v2_2014'
 
 # input username and password
 user = getpass.getpass(prompt = 'Enter NASA Earthdata Login Username: ')
@@ -49,7 +49,7 @@ layers = [(prods[0],'SRB1'),
           (prods[0],'SRB2'),
           (prods[0],'SRB3'),
           (prods[0],'SRB4'),
-          (prods[0],'SRB5'),
+          (prods[0],'SRB5'), 
           (prods[0],'SRB6'),
           (prods[0],'SRB7'),
           (prods[0],'LINEAGEQA'),
