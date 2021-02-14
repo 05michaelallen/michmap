@@ -15,24 +15,32 @@ from datetime import datetime
 #os.chdir("/Volumes/ellwood/michmap/code")
 os.chdir("/home/vegveg/michmap/michmap/")
 clear_threshold = 0
-flag_MANUALDROPS = True
+flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
 years = [2018]
 # initialize bands
 bands = [
-    'SRB1', 
+    #'SRB1', 
     'SRB2', 
     'SRB3', 
     'SRB4', 
-    'SRB5', 
-    'SRB6', 
-    'SRB7'
+    #'SRB5', 
+    #'SRB6', 
+    #'SRB7'
     ]
 
+# =============================================================================
+# functions
+# =============================================================================
+def drop_from_csv(fn, dropcsv):
+    for d in dropcsv:
+            fn = [v for v in fn if v != d]
+            return fn
+
+# =============================================================================
+# main loop
+# =============================================================================
 for year in years:
-    # =============================================================================
-    # import and initialize
-    # =============================================================================
     # import metadata
     meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
     qa = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
@@ -45,7 +53,12 @@ for year in years:
     
     # filter for good (non cloud values)
     qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
-    qa = qa[qa['clear'] > clear_threshold]
+    qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
+    
+    # list good values in aerosol bands
+    sr_clear_aerosol = [1, 2, 4, 32,
+                        66, 68, 96, 100,
+                        130, 132, 160, 164] # higher numbers are high aerosol
     
     # grab str(year)_doy
     qa['Date']= pd.to_datetime(qa['Date'])
@@ -60,8 +73,7 @@ for year in years:
     # cloud/aerosol detection)
     if flag_MANUALDROPS:
         manualdrops = pd.read_csv("../data/" + str(year) + "/manual_drops.csv").values
-        for d in manualdrops:
-            fn = [v for v in fn if v != d]
+        fn = drop_from_csv(fn, manualdrops)
     
     # =============================================================================
     # compute band means from all images
@@ -93,16 +105,19 @@ for year in years:
         image_mean = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.float32)
         for f in fn:
             print("file: " + str(f))
-            # import pixel quality flags
+            # import pixel qa + cloud flags
             px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
             px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
+            # import sr_aerosol qa flags
+            px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_LC08.001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
+            px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
             # import surface reflectance band
             bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
             # reassign reflectances outside of range bad values
             bf[bf < 0] = 1 
             bf[bf > scalefactor] = scalefactor
-            # apply qa mask
-            bfm = bf * px_qa_fm
+            # apply qa masks
+            bfm = bf * px_qa_fm * px_sraerosol_fm
             # add to image sum
             image_sum = image_sum + bfm
             # add to image count
@@ -114,7 +129,7 @@ for year in years:
         # tag nodata
         image_mean[image_mean <= 0] = -9999
         # output
-        with rio.open("../data/" + str(year) + "_" + bands[b] + ".tif", 'w', **image_meta) as dst:
+        with rio.open("../data/" + str(year) + "_" + bands[b] + "xx.tif", 'w', **image_meta) as dst:
             dst.write(image_mean)
             
     print(datetime.now())
