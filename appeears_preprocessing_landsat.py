@@ -20,13 +20,13 @@ scalefactor = 10000
 years = [2018]
 # initialize bands
 bands = [
-    #'SRB1', 
+    'SRB1', 
     'SRB2', 
     'SRB3', 
     'SRB4', 
-    #'SRB5', 
-    #'SRB6', 
-    #'SRB7'
+    'SRB5', 
+    'SRB6', 
+    'SRB7'
     ]
 
 # =============================================================================
@@ -129,7 +129,7 @@ for year in years:
         # tag nodata
         image_mean[image_mean <= 0] = -9999
         # output
-        with rio.open("../data/" + str(year) + "_" + bands[b] + "xx.tif", 'w', **image_meta) as dst:
+        with rio.open("../data/" + str(year) + "_" + bands[b] + ".tif", 'w', **image_meta) as dst:
             dst.write(image_mean)
             
     print(datetime.now())
