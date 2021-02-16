@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-#os.chdir("/Volumes/ellwood/michmap/code")
-os.chdir("/home/vegveg/michmap/michmap/")
+wd = "/home/vegveg/michmap/michmap/"
+os.chdir(wd)
 clear_threshold = 0
 year = 2015
 
@@ -62,7 +62,7 @@ for f in fn:
         try:
             bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
         except:
-            badfn.append(str(f) + "_" + bands[b])
+            badfn.append("_" + bands[b] + "_doy" + str(f))
             print("bad band")
             pass # doing nothing on exception
             

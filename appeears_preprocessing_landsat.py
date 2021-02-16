@@ -11,13 +11,14 @@ import os
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import matplotlib.pyplot as plt
 
-#os.chdir("/Volumes/ellwood/michmap/code")
-os.chdir("/home/vegveg/michmap/michmap/")
-clear_threshold = 0
-flag_MANUALDROPS = False # if we have a manual drop file 
+wd = "/home/vegveg/michmap/michmap/"
+os.chdir(wd)
+clear_threshold = 10000
+flag_MANUALDROPS = True # if we have a manual drop file 
 scalefactor = 10000
-years = [2018]
+years = [2017]
 # initialize bands
 bands = [
     'SRB1', 
@@ -56,7 +57,7 @@ for year in years:
     qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
     
     # list good values in aerosol bands
-    sr_clear_aerosol = [1, 2, 4, 32,
+    sr_clear_aerosol = [2, 4, 32,
                         66, 68, 96, 100,
                         130, 132, 160, 164] # higher numbers are high aerosol
     
@@ -72,11 +73,15 @@ for year in years:
     # filter manual drops (these were manually inspected and found to have bad
     # cloud/aerosol detection)
     if flag_MANUALDROPS:
-        manualdrops = pd.read_csv("../data/" + str(year) + "/manual_drops.csv").values
-        fn = drop_from_csv(fn, manualdrops)
+        manualdropsfn = "../data/" + str(year) + "/manual_drops.csv"
+        if os.path.isfile(manualdropsfn):
+            manualdrops = pd.read_csv("../data/" + str(year) + "/manual_drops.csv").values
+            fn = drop_from_csv(fn, manualdrops)
+        else:
+            print("manual_drops.csv does not exist /nrunning with all image dates")
     
     # =============================================================================
-    # compute band means from all images
+    # compute band means from all images in the year sample
     # =============================================================================
     # import reference image metadata
     image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[0]) + "_aid0001.tif").meta
@@ -117,15 +122,16 @@ for year in years:
             bf[bf < 0] = 1 
             bf[bf > scalefactor] = scalefactor
             # apply qa masks
-            bfm = bf * px_qa_fm * px_sraerosol_fm
+            mask = px_qa_fm * px_sraerosol_fm
+            bfm = bf * mask
             # add to image sum
             image_sum = image_sum + bfm
             # add to image count
-            px_qa_fm_count = px_qa_fm.copy()
-            px_qa_fm_count[px_qa_fm_count > 0] = 1
-            image_count = image_count + px_qa_fm_count
+            mask_count = mask.copy()
+            mask_count[mask_count > 0] = 1
+            image_count = image_count + mask_count
         # take average, apply scale factor
-        image_mean = ((image_sum/image_count)/scalefactor).astype(np.float32)
+        image_mean = ((image_sum/image_count)/scalefactor)
         # tag nodata
         image_mean[image_mean <= 0] = -9999
         # output
