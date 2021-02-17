@@ -12,33 +12,16 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
+# flags
+flag_RETESTBADFN = True
+
+# =============================================================================
+# set parameters
+# =============================================================================
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
-clear_threshold = 0
-year = 2015
-
-# import metadata
-meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
-qa = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
-qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-lookup.csv")
-
-# list clear values
-qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
-qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
-
-# filter for good (non cloud values)
-qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
-qa = qa[qa['clear'] > clear_threshold]
-
-# grab str(year)_doy
-qa['Date']= pd.to_datetime(qa['Date'])
-qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
-# sort
-qa = qa.sort_values(by = 'yeardoy')
-
-# find unique doys
-fn = np.unique(qa['yeardoy'])
-
+clear_threshold = 10000
+year = 2019
 # initialize bands
 bands = [
     'SRB1', 
@@ -50,6 +33,43 @@ bands = [
     'SRB7'
     ]
 
+# =============================================================================
+# build list of files to test
+# =============================================================================
+if flag_RETESTBADFN:
+    ### testing files that were re-downloaded after failed/corrupted dl
+    fn_list = pd.read_csv("../data/" + str(year) + "/badfn.csv").iloc[:,1].values.tolist()
+    fn = []
+    for f in fn_list:
+        fn.append(str(year) + f.split(str(year))[1])
+else:
+    ### initial download from metadata files
+    # import metadata
+    meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
+    qa = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
+    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-lookup.csv")
+    
+    # list clear values
+    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
+    qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
+    
+    # filter for good (non cloud values)
+    qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
+    qa = qa[qa['clear'] > clear_threshold]
+    
+    # grab yeardoy
+    qa['Date']= pd.to_datetime(qa['Date'])
+    qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
+    # sort
+    qa = qa.sort_values(by = 'yeardoy')
+    
+    # find unique doys
+    fn = np.unique(qa['yeardoy'])
+
+# =============================================================================
+# main testing loop
+# =============================================================================
+### test each file by opening it via rio.open().read(), store failed reads in badfn.csv in data dir
 badfn = []
 for f in fn:
     print(datetime.now())

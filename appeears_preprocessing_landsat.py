@@ -18,7 +18,7 @@ os.chdir(wd)
 clear_threshold = 10000
 flag_MANUALDROPS = True # if we have a manual drop file 
 scalefactor = 10000
-years = [2017]
+years = [2020, 2015]
 # initialize bands
 bands = [
     'SRB1', 
@@ -78,7 +78,7 @@ for year in years:
             manualdrops = pd.read_csv("../data/" + str(year) + "/manual_drops.csv").values
             fn = drop_from_csv(fn, manualdrops)
         else:
-            print("manual_drops.csv does not exist /nrunning with all image dates")
+            print("manual_drops.csv does not exist in the data dir -- running with all image dates")
     
     # =============================================================================
     # compute band means from all images in the year sample
@@ -97,7 +97,7 @@ for year in years:
     # take mean per-pixel reflectance (via per-pixel sum/count)
     # outputs as year_SRBx.tif
     
-    # note: this setup allows for single band processing, so we process the pixel qa
+    # note: this setup allows for single band processing, so we load the pixel qa
     # for each band (which is unnecessary). can optimize by swapping the order
     # of processing. 
     for b in range(len(bands)):

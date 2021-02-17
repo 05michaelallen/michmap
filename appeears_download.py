@@ -14,7 +14,9 @@ import json
 import getpass
 import pandas as pd
 
+# flags
 flag_REDOWNLOADBADFN = True
+flag_VERBOSE = True
 
 # =============================================================================
 # set parameters
@@ -28,7 +30,7 @@ API = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/'
 # set task id (from request JSON)
 # note: can also pair this with api data request, can pull tast_id straight from 
 # data request
-year = 2020
+year = 2019
 # import json
 req_params = open("../data/" + str(year) + "/mimap-" + str(year) + "-request.json")
 req_params = json.loads(req_params.read())
@@ -94,6 +96,8 @@ for file in files:
     trycnt = 5  # max try cnt
     while trycnt > 0:
         try:
+            if flag_VERBOSE:
+                print(file)
             download_response = requests.get(f"{API}/bundle/{task_id}/{file}", stream = True)
             # parse the name from Content-Disposition header
             filename = os.path.basename(cgi.parse_header(download_response.headers['Content-Disposition'])[1]['filename'])
