@@ -37,11 +37,12 @@ bands = [
 # build list of files to test
 # =============================================================================
 if flag_RETESTBADFN:
-    ### testing files that were re-downloaded after failed/corrupted dl
+    ### testing dates with bands that were re-downloaded after failed/corrupted dl
     fn_list = pd.read_csv("../data/" + str(year) + "/badfn.csv").iloc[:,1].values.tolist()
     fn = []
     for f in fn_list:
         fn.append(str(year) + f.split(str(year))[1])
+    fn = np.unique(fn)
 else:
     ### initial download from metadata files
     # import metadata
