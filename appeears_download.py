@@ -16,7 +16,7 @@ import pandas as pd
 
 # flags
 flag_REDOWNLOADBADFN = True
-flag_VERBOSE = True
+flag_VERBOSE = False
 
 # =============================================================================
 # set parameters
@@ -30,7 +30,7 @@ API = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/'
 # set task id (from request JSON)
 # note: can also pair this with api data request, can pull tast_id straight from 
 # data request
-year = 2019
+year = 2000
 # import json
 req_params = open("../data/" + str(year) + "/mimap-" + str(year) + "-request.json")
 req_params = json.loads(req_params.read())

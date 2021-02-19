@@ -21,7 +21,13 @@ flag_RETESTBADFN = True
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 2019
+year = 2000
+# specify sensor prefix
+if year < 2013:
+    sensor = "LT05"
+elif year > 2013: 
+    sensor = "LC08"
+    
 # initialize bands
 bands = [
     'SRB1', 
@@ -32,6 +38,13 @@ bands = [
     'SRB6', 
     'SRB7'
     ]
+
+# drop band 6 if not landsat 8
+if sensor == "LT05":
+    try:
+        bands.remove('SRB6')
+    except:
+        pass
 
 # =============================================================================
 # build list of files to test
@@ -46,9 +59,9 @@ if flag_RETESTBADFN:
 else:
     ### initial download from metadata files
     # import metadata
-    meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
-    qa = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
-    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-lookup.csv")
+    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
+    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
+    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
     
     # list clear values
     qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
@@ -76,12 +89,12 @@ for f in fn:
     print(datetime.now())
     print("file: " + str(f))
     # import pixelqa
-    px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
+    px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
     # import selected bands for fn
     for b in range(len(bands)):
         print("band: " + bands[b])
         try:
-            bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
+            bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
         except:
             badfn.append("_" + bands[b] + "_doy" + str(f))
             print("bad band")

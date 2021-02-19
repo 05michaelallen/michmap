@@ -11,7 +11,6 @@ import os
 import numpy as np
 import pandas as pd
 from datetime import datetime
-import matplotlib.pyplot as plt
 
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
@@ -42,10 +41,23 @@ def drop_from_csv(fn, dropcsv):
 # main loop
 # =============================================================================
 for year in years:
+    # specify sensor prefix
+    if year < 2013:
+        sensor = "LT05"
+    elif year > 2013: 
+        sensor = "" + sensor + ""
+    
+    # drop band 6 if not landsat 8
+    if sensor == "LT05":
+        try:
+            bands.remove('SRB6')
+        except:
+            pass
+        
     # import metadata
-    meta = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-Statistics.csv")
-    qa = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-Statistics-QA.csv")
-    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-LC08-001-PIXELQA-lookup.csv")
+    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
+    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
+    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
     
     # list clear values
     qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & 
@@ -56,7 +68,7 @@ for year in years:
     qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
     qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
     
-    # list good values in aerosol bands
+    # list good values in aerosol bands (only for " + sensor + ")
     sr_clear_aerosol = [2, 4, 32,
                         66, 68, 96, 100,
                         130, 132, 160, 164] # higher numbers are high aerosol
@@ -84,7 +96,7 @@ for year in years:
     # compute band means from all images in the year sample
     # =============================================================================
     # import reference image metadata
-    image_meta = rio.open("../data/" + str(year) + "/CU_LC08.001_SRB1_doy" + str(fn[0]) + "_aid0001.tif").meta
+    image_meta = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRB1_doy" + str(fn[0]) + "_aid0001.tif").meta
     # update metadata
     image_meta = image_meta.copy()
     image_meta.update({'count': 1,
@@ -108,21 +120,27 @@ for year in years:
         image_sum = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.float32)
         image_count = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.int16)
         image_mean = np.zeros([1, image_meta['height'], image_meta['width']], dtype = np.float32)
+        
+        ### enter loop for each file in the list
         for f in fn:
             print("file: " + str(f))
             # import pixel qa + cloud flags
-            px_qa_f = rio.open("../data/" + str(year) + "/CU_LC08.001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
+            px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
             px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
-            # import sr_aerosol qa flags
-            px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_LC08.001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
-            px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
+            # import sr_aerosol qa flags (if LC08)
+            if sensor == "" + sensor + "":
+                px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
+                px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
+                # create mask
+                mask = px_qa_fm * px_sraerosol_fm
+            else:
+                mask = px_qa_fm
             # import surface reflectance band
-            bf = rio.open("../data/" + str(year) + "/CU_LC08.001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
+            bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
             # reassign reflectances outside of range bad values
             bf[bf < 0] = 1 
             bf[bf > scalefactor] = scalefactor
             # apply qa masks
-            mask = px_qa_fm * px_sraerosol_fm
             bfm = bf * mask
             # add to image sum
             image_sum = image_sum + bfm
