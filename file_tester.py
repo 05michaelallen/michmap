@@ -21,7 +21,7 @@ flag_RETESTBADFN = True
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 2000
+year = 1989
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
@@ -51,11 +51,36 @@ if sensor == "LT05":
 # =============================================================================
 if flag_RETESTBADFN:
     ### testing dates with bands that were re-downloaded after failed/corrupted dl
-    fn_list = pd.read_csv("../data/" + str(year) + "/badfn.csv").iloc[:,1].values.tolist()
-    fn = []
-    for f in fn_list:
-        fn.append(str(year) + f.split(str(year))[1])
-    fn = np.unique(fn)
+    if os.path.isfile("../data/" + str(year) + "/badfn.csv"):
+        fn_list = pd.read_csv("../data/" + str(year) + "/badfn.csv").iloc[:,1].values.tolist()
+        fn = []
+        for f in fn_list:
+            fn.append(str(year) + f.split(str(year))[1])
+        fn = np.unique(fn)
+    else:
+        print("no badfn.csv file in data dir, terting entire set") ### put in function
+        ### initial download from metadata files
+        # import metadata
+        meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
+        qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
+        qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
+        
+        # list clear values
+        qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
+        qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
+        
+        # filter for good (non cloud values)
+        qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
+        qa = qa[qa['clear'] > clear_threshold]
+        
+        # grab yeardoy
+        qa['Date']= pd.to_datetime(qa['Date'])
+        qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
+        # sort
+        qa = qa.sort_values(by = 'yeardoy')
+        
+        # find unique doys
+        fn = np.unique(qa['yeardoy'])
 else:
     ### initial download from metadata files
     # import metadata

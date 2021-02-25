@@ -15,9 +15,9 @@ from datetime import datetime
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-flag_MANUALDROPS = True # if we have a manual drop file 
+flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-years = [2019]
+years = [2000]
 # initialize bands
 bands = [
     'SRB1', 
@@ -68,10 +68,13 @@ for year in years:
     qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
     qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
     
-    # list good values in aerosol bands (only for " + sensor + ")
-    sr_clear_aerosol = [2, 4, 32,
-                        66, 68, 96, 100,
-                        130, 132, 160, 164] # higher numbers are high aerosol
+    # list good values in aerosol bands
+    if sensor == "LC08":
+        sr_clear_aerosol = [2, 4, 32,
+                            66, 68, 96, 100,
+                            130, 132, 160, 164] # higher numbers are high aerosol
+    else:
+        sr_clear_aerosol = 300 # <0.3 AOT is reasonably clear
     
     # grab str(year)_doy
     qa['Date']= pd.to_datetime(qa['Date'])
@@ -127,13 +130,14 @@ for year in years:
             # import pixel qa + cloud flags
             px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
             px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
-            # import sr_aerosol qa flags (if LC08)
-            if sensor == "" + sensor + "":
+            # import sr_aerosol qa flags (if LC08)   
+            if sensor == 'LC08':
                 px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
                 px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
                 # create mask
                 mask = px_qa_fm * px_sraerosol_fm
             else:
+                px_aerot_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRATMOSOPACITYQA_doy" + str(f) + "_aid0001.tif").read()
                 mask = px_qa_fm
             # import surface reflectance band
             bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
