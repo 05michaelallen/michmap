@@ -7,7 +7,6 @@ This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.
 - Rasterio 
 - GDAL (>1.1 I believe)
 - Geopandas
-- Note: Requires other non-geospatial packages (most people will already have them installed, so I don't list them).
 - Note 2: If you don't have these, I recommend installing Rasterio first. Follow the instructions [here](https://rasterio.readthedocs.io/en/latest/installation.html)
 
 **Scripts are below:**
