@@ -30,7 +30,7 @@ API = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/'
 # set task id (from request JSON)
 # note: can also pair this with api data request, can pull tast_id straight from 
 # data request
-year = 1989
+year = 2009
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"

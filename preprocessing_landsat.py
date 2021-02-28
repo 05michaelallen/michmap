@@ -17,7 +17,7 @@ os.chdir(wd)
 clear_threshold = 10000
 flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-years = [2000]
+years = [2010]
 # initialize bands
 bands = [
     'SRB1', 
@@ -32,10 +32,59 @@ bands = [
 # =============================================================================
 # functions
 # =============================================================================
+"""
+uses manually defined drops list to drop files from the processing list
+
+inputs:
+    fn: filelist
+
+"""
+
 def drop_from_csv(fn, dropcsv):
     for d in dropcsv:
             fn = [v for v in fn if v != d]
             return fn
+       
+        
+"""
+generate list of unique filenames for dl/test, also loads metadata for reference
+inputs:
+    year: int
+    sensor: string, either LC08 or LT05 for Landsat 8 and Landsat 5
+    clear_threshold: int, images are thrown out if below this total px count
+
+returns:
+    fn: list of filenames 
+    meta: raw metadata file from Appeears download
+    qa_clear_values: lists values of good qa pixels
+
+"""
+
+def generate_fn_list(year, sensor, clear_threshold):
+    ### initial download from metadata files
+    # import metadata
+    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
+    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
+    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
+    
+    # list clear values
+    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
+    qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
+    
+    # filter for good (non cloud values)
+    qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
+    qa = qa[qa['clear'] > clear_threshold]
+    
+    # grab yeardoy
+    qa['Date']= pd.to_datetime(qa['Date'])
+    qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
+    # sort
+    qa = qa.sort_values(by = 'yeardoy')
+    
+    # find unique doys
+    fn = np.unique(qa['yeardoy'])
+    return fn, meta, qa_clear_values
+
 
 # =============================================================================
 # main loop
@@ -45,7 +94,9 @@ for year in years:
     if year < 2013:
         sensor = "LT05"
     elif year > 2013: 
-        sensor = "" + sensor + ""
+        sensor = "LC08"
+    else: 
+        raise ValueError('Year not valid. Must be int.')
     
     # drop band 6 if not landsat 8
     if sensor == "LT05":
@@ -54,36 +105,17 @@ for year in years:
         except:
             pass
         
-    # import metadata
-    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
-    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
-    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
+    # import metadata, list files
+    fn, meta, qa_clear_values = generate_fn_list(year, sensor, clear_threshold)
     
-    # list clear values
-    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & 
-                                (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
-    qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
-    
-    # filter for good (non cloud values)
-    qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
-    qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
-    
-    # list good values in aerosol bands
+    # list good values in aerosol bands (note: LC08 and LT05 have different aerosol products)
+    # like the qa LC08 are bitpacked, but using raw values is fine
     if sensor == "LC08":
         sr_clear_aerosol = [2, 4, 32,
                             66, 68, 96, 100,
                             130, 132, 160, 164] # higher numbers are high aerosol
     else:
         sr_clear_aerosol = 300 # <0.3 AOT is reasonably clear
-    
-    # grab str(year)_doy
-    qa['Date']= pd.to_datetime(qa['Date'])
-    qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
-    # sort
-    qa = qa.sort_values(by = 'yeardoy')
-    
-    # find unique doys
-    fn = np.unique(qa['yeardoy'])
     
     # filter manual drops (these were manually inspected and found to have bad
     # cloud/aerosol detection)
