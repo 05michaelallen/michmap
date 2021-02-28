@@ -15,6 +15,7 @@ This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.
 *appeears_request.py:* Requests band-by-band data using a user-defined shapefile/bounding box. Requires:
 - time/space bounds (preferably a .shp)
 - a (free) NASA Earthdata account.  
+
 *appeears_download.py:* Pings the AppEEARS API to see if the request is complete. Downloads imagery band by band.
 - Either manually retrieve the task ID from the request script, or download the \*request.json file from the AppEEARS platform. This script scrapes the JSON for the task ID and then calls the api to check done-ness. 
 - The download loop will try to download each file 5 times, will raise a runtime error if it is unable to retrieve a specific file
