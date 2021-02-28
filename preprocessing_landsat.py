@@ -17,7 +17,7 @@ os.chdir(wd)
 clear_threshold = 10000
 flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-years = [2010]
+years = [2009, 2010]
 # initialize bands
 bands = [
     'SRB1', 
@@ -93,10 +93,13 @@ for year in years:
     # specify sensor prefix
     if year < 2013:
         sensor = "LT05"
+        aerosol_prefix = "SRATMOSOPACITYQA"
     elif year > 2013: 
         sensor = "LC08"
+        aerosol_prefix = "SRAEROSOLQA"
     else: 
         raise ValueError('Year not valid. Must be int.')
+    
     
     # drop band 6 if not landsat 8
     if sensor == "LT05":
@@ -114,7 +117,7 @@ for year in years:
         sr_clear_aerosol = [2, 4, 32,
                             66, 68, 96, 100,
                             130, 132, 160, 164] # higher numbers are high aerosol
-    else:
+    elif sensor == "LT05":
         sr_clear_aerosol = 300 # <0.3 AOT is reasonably clear
     
     # filter manual drops (these were manually inspected and found to have bad
@@ -164,13 +167,15 @@ for year in years:
             px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
             # import sr_aerosol qa flags (if LC08)   
             if sensor == 'LC08':
-                px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
+                px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()
                 px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
                 # create mask
                 mask = px_qa_fm * px_sraerosol_fm
-            else:
-                px_aerot_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRATMOSOPACITYQA_doy" + str(f) + "_aid0001.tif").read()
-                mask = px_qa_fm
+            elif sensor == 'LT05':
+                px_aero_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "doy" + str(f) + "_aid0001.tif").read()
+                px_aero_f[px_aero_f <= sr_clear_aerosol] = 1
+                px_aero_f[px_aero_f >= sr_clear_aerosol] = 0
+                mask = px_qa_fm * px_aero_f
             # import surface reflectance band
             bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
             # reassign reflectances outside of range bad values

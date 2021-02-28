@@ -63,12 +63,14 @@ def generate_fn_list(year, sensor, clear_threshold):
 wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 2009
+year = 2010
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
+    aerosol_prefix = "SRATMOSOPACITYQA"
 elif year > 2013: 
     sensor = "LC08"
+    aerosol_prefix = "SRAEROSOLQA"
 else: 
     raise ValueError('Year not valid. Must be int.')
     
@@ -103,7 +105,7 @@ if flag_RETESTBADFN:
             fn.append(str(year) + f.split(str(year))[1])
         fn = np.unique(fn)
     else:
-        print("no badfn.csv file in data dir, terting entire set") ### put in function
+        print("no badfn.csv file in data dir, testing entire set")
         fn, meta = generate_fn_list(year, sensor, clear_threshold)
 
 else:
@@ -122,11 +124,12 @@ for f in fn:
         px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
     except:
         badfn.append("_PIXELQA_doy" + str(f))
+        print("bad qa band")
     try:
-        if sensor == 'LT05':
-            aerosol = rio.open()
-        elif == 'LT05'
-                
+        aerosol = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()    
+    except:
+        badfn.append("_" + aerosol_prefix + "_doy" + str(f))
+        print("bad aerosol band")
     # import selected bands for fn
     for b in range(len(bands)):
         print("band: " + bands[b])
