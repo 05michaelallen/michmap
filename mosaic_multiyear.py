@@ -24,7 +24,8 @@ def merge_nanmean(b0, b1):
 # set parameters
 # =============================================================================
 # define and set wd
-wd = "/media/vegveg/bedlam/michmap/michmap/"
+#wd = "/Volumes/ellwood/michmap/code/"
+wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 
 # years to merge
