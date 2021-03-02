@@ -17,11 +17,7 @@ os.chdir(wd)
 clear_threshold = 10000
 flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-<<<<<<< HEAD
 years = [2009]
-=======
-years = [2009, 2010]
->>>>>>> a2df9eb4c2b2b7a5b84ad953b90b940f0dff1b27
 # initialize bands
 bands = [
     'SRB1', 
@@ -36,17 +32,6 @@ bands = [
 # =============================================================================
 # functions
 # =============================================================================
-<<<<<<< HEAD
-=======
-"""
-uses manually defined drops list to drop files from the processing list
-
-inputs:
-    fn: filelist
-
-"""
->>>>>>> a2df9eb4c2b2b7a5b84ad953b90b940f0dff1b27
-
 def drop_from_csv(fn, dropcsv):
     """uses manually defined drops list to drop files from the processing list
     
@@ -58,7 +43,6 @@ def drop_from_csv(fn, dropcsv):
             fn = [v for v in fn if v != d]
             return fn
        
-<<<<<<< HEAD
     
 def generate_fn_list(year, sensor, clear_threshold):
     """generate list of unique filenames for dl/test, also loads metadata for reference
@@ -73,24 +57,6 @@ def generate_fn_list(year, sensor, clear_threshold):
         qa_clear_values: lists values of good qa pixels
     
     """
-=======
-        
-"""
-generate list of unique filenames for dl/test, also loads metadata for reference
-inputs:
-    year: int
-    sensor: string, either LC08 or LT05 for Landsat 8 and Landsat 5
-    clear_threshold: int, images are thrown out if below this total px count
-
-returns:
-    fn: list of filenames 
-    meta: raw metadata file from Appeears download
-    qa_clear_values: lists values of good qa pixels
-
-"""
-
-def generate_fn_list(year, sensor, clear_threshold):
->>>>>>> a2df9eb4c2b2b7a5b84ad953b90b940f0dff1b27
     ### initial download from metadata files
     # import metadata
     meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
@@ -202,11 +168,7 @@ for year in years:
                 # create mask
                 mask = px_qa_fm * px_sraerosol_fm
             elif sensor == 'LT05':
-<<<<<<< HEAD
                 px_aero_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()
-=======
-                px_aero_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "doy" + str(f) + "_aid0001.tif").read()
->>>>>>> a2df9eb4c2b2b7a5b84ad953b90b940f0dff1b27
                 px_aero_f[px_aero_f <= sr_clear_aerosol] = 1
                 px_aero_f[px_aero_f >= sr_clear_aerosol] = 0
                 mask = px_qa_fm * px_aero_f
