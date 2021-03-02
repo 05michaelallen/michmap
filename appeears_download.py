@@ -16,20 +16,21 @@ import pandas as pd
 
 # flags
 flag_REDOWNLOADBADFN = True
-flag_VERBOSE = True
+flag_VERBOSE = False
 
 # =============================================================================
 # set parameters
 # =============================================================================
 # define and set wd
-wd = "/media/vegveg/bedlam/michmap/michmap/"
+#wd = "/Volumes/ellwood/michmap/code/"
+wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 # path to api
 API = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/' 
 # set task id (from request JSON)
 # note: can also pair this with api data request, can pull tast_id straight from 
 # data request
-year = 1990
+year = 2010
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"

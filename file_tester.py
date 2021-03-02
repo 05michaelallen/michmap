@@ -60,10 +60,10 @@ def generate_fn_list(year, sensor, clear_threshold):
 # =============================================================================
 # set parameters
 # =============================================================================
-wd = "/media/vegveg/bedlam/michmap/michmap/"
+wd = "/home/vegveg/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 1990
+year = 2010
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
@@ -139,8 +139,6 @@ for f in fn:
             badfn.append("_" + bands[b] + "_doy" + str(f))
             print("bad band")
             pass # doing nothing on exception
-if len(badfn) > 0:            
-    bad_fndf = pd.DataFrame(badfn)
-    bad_fndf.to_csv("../data/" + str(year) + "/badfn.csv")
-else:
-    print("no bad bands detected!")
+            
+bad_fndf = pd.DataFrame(badfn)
+bad_fndf.to_csv("../data/" + str(year) + "/badfn.csv")
