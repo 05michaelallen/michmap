@@ -64,10 +64,7 @@ for l in layers:
             "layer": l[1],
             "product": l[0]
           })
-
-# =============================================================================
-# 
-# =============================================================================
+    
 # save token
 token = token_response['token']
 head = {'Authorization': 'Bearer {}'.format(token)}

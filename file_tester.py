@@ -18,20 +18,20 @@ flag_RETESTBADFN = True
 # =============================================================================
 # functions
 # =============================================================================
-"""
-generate list of unique filenames for dl/test, also loads metadata for reference
-inputs:
-    year: int
-    sensor: string, either LC08 or LT05 for Landsat 8 and Landsat 5
-    clear_threshold: images are thrown out if below this total px count
-
-returns:
-    fn: list of filenames 
-    meta: raw metadata file from Appeears download
-
-"""
 
 def generate_fn_list(year, sensor, clear_threshold):
+    """
+    generate list of unique filenames for dl/test, also loads metadata for reference
+    inputs:
+        year: int
+        sensor: string, either LC08 or LT05 for Landsat 8 and Landsat 5
+        clear_threshold: images are thrown out if below this total px count
+    
+    returns:
+        fn: list of filenames 
+        meta: raw metadata file from Appeears download
+    
+    """
     ### initial download from metadata files
     # import metadata
     meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
@@ -63,11 +63,7 @@ def generate_fn_list(year, sensor, clear_threshold):
 wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-<<<<<<< HEAD
 year = 1990
-=======
-year = 2010
->>>>>>> a2df9eb4c2b2b7a5b84ad953b90b940f0dff1b27
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
