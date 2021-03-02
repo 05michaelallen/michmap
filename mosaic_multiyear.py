@@ -12,7 +12,7 @@ from rasterio.merge import merge
 import numpy as np
 
 # flags
-flag_MULTIBAND = True
+flag_MULTIBAND = False
 
 # =============================================================================
 # functions
@@ -24,12 +24,11 @@ def merge_nanmean(b0, b1):
 # set parameters
 # =============================================================================
 # define and set wd
-#wd = "/Volumes/ellwood/michmap/code/"
-wd = "/home/vegveg/michmap/michmap/"
+wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 
 # years to merge
-years = [2019, 2020]
+years = [2004, 2005]
 
 # initialize bands
 bands = [
@@ -38,7 +37,7 @@ bands = [
     'SRB3', 
     'SRB4', 
     'SRB5', 
-    'SRB6', 
+    #'SRB6', 
     'SRB7'
     ]
 
@@ -47,8 +46,8 @@ bands = [
 # =============================================================================
 if flag_MULTIBAND:
     # open connection
-    y0 = rio.open("../data/" + str(years[0]) + "_Landsat8.tif")
-    y1 = rio.open("../data/" + str(years[1]) + "_Landsat8.tif")
+    y0 = rio.open("../data/" + str(years[0]) + "_Landsat.tif")
+    y1 = rio.open("../data/" + str(years[1]) + "_Landsat.tif")
     # merge and output
     merge([y0, y1], method = merge_nanmean, dst_path = "../data/" + str(years[0]) + "_" + str(years[1]) + "tt.tif")
 else:

@@ -12,12 +12,12 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-wd = "/home/vegveg/michmap/michmap/"
+wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-flag_MANUALDROPS = True # if we have a manual drop file 
+flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-years = [2019]
+years = [2009]
 # initialize bands
 bands = [
     'SRB1', 
@@ -32,10 +32,56 @@ bands = [
 # =============================================================================
 # functions
 # =============================================================================
+
 def drop_from_csv(fn, dropcsv):
+    """uses manually defined drops list to drop files from the processing list
+    
+    inputs:
+        fn: filelist
+    
+    """
     for d in dropcsv:
             fn = [v for v in fn if v != d]
             return fn
+       
+    
+def generate_fn_list(year, sensor, clear_threshold):
+    """generate list of unique filenames for dl/test, also loads metadata for reference
+    inputs:
+        year: int
+        sensor: string, either LC08 or LT05 for Landsat 8 and Landsat 5
+        clear_threshold: int, images are thrown out if below this total px count
+    
+    returns:
+        fn: list of filenames 
+        meta: raw metadata file from Appeears download
+        qa_clear_values: lists values of good qa pixels
+    
+    """
+    ### initial download from metadata files
+    # import metadata
+    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
+    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
+    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
+    
+    # list clear values
+    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
+    qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
+    
+    # filter for good (non cloud values)
+    qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
+    qa = qa[qa['clear'] > clear_threshold]
+    
+    # grab yeardoy
+    qa['Date']= pd.to_datetime(qa['Date'])
+    qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
+    # sort
+    qa = qa.sort_values(by = 'yeardoy')
+    
+    # find unique doys
+    fn = np.unique(qa['yeardoy'])
+    return fn, meta, qa_clear_values
+
 
 # =============================================================================
 # main loop
@@ -44,8 +90,13 @@ for year in years:
     # specify sensor prefix
     if year < 2013:
         sensor = "LT05"
+        aerosol_prefix = "SRATMOSOPACITYQA"
     elif year > 2013: 
-        sensor = "" + sensor + ""
+        sensor = "LC08"
+        aerosol_prefix = "SRAEROSOLQA"
+    else: 
+        raise ValueError('Year not valid. Must be int.')
+    
     
     # drop band 6 if not landsat 8
     if sensor == "LT05":
@@ -54,33 +105,17 @@ for year in years:
         except:
             pass
         
-    # import metadata
-    meta = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-Statistics.csv")
-    qa = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-Statistics-QA.csv")
-    qa_lookup = pd.read_csv("../data/" + str(year) + "/CU-" + sensor + "-001-PIXELQA-lookup.csv")
+    # import metadata, list files
+    fn, meta, qa_clear_values = generate_fn_list(year, sensor, clear_threshold)
     
-    # list clear values
-    qa_clear_values = qa_lookup[(qa_lookup['Cloud'] == "No") & 
-                                (qa_lookup['Cloud Shadow'] == "No")]["Value"].tolist()
-    qa_clear_values_str = [str(x) for x in qa_clear_values] # convert to string
-    
-    # filter for good (non cloud values)
-    qa['clear'] = np.nansum(qa[qa_clear_values_str], axis = 1)
-    qa = qa[qa['clear'] > clear_threshold] # note: currently not using this
-    
-    # list good values in aerosol bands (only for " + sensor + ")
-    sr_clear_aerosol = [2, 4, 32,
-                        66, 68, 96, 100,
-                        130, 132, 160, 164] # higher numbers are high aerosol
-    
-    # grab str(year)_doy
-    qa['Date']= pd.to_datetime(qa['Date'])
-    qa['yeardoy'] = (qa['Date'].dt.year*1000 + qa['Date'].dt.dayofyear) # index for finding filenames
-    # sort
-    qa = qa.sort_values(by = 'yeardoy')
-    
-    # find unique doys
-    fn = np.unique(qa['yeardoy'])
+    # list good values in aerosol bands (note: LC08 and LT05 have different aerosol products)
+    # like the qa LC08 are bitpacked, but using raw values is fine
+    if sensor == "LC08":
+        sr_clear_aerosol = [2, 4, 32,
+                            66, 68, 96, 100,
+                            130, 132, 160, 164] # higher numbers are high aerosol
+    elif sensor == "LT05":
+        sr_clear_aerosol = 300 # <0.3 AOT is reasonably clear
     
     # filter manual drops (these were manually inspected and found to have bad
     # cloud/aerosol detection)
@@ -127,14 +162,17 @@ for year in years:
             # import pixel qa + cloud flags
             px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()
             px_qa_fm = np.isin(px_qa_f, qa_clear_values).astype(np.int16) # convert to boolean and then to float, good values = 1
-            # import sr_aerosol qa flags (if LC08)
-            if sensor == "" + sensor + "":
-                px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_SRAEROSOLQA_doy" + str(f) + "_aid0001.tif").read()
+            # import sr_aerosol qa flags (if LC08)   
+            if sensor == 'LC08':
+                px_sraerosol_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()
                 px_sraerosol_fm = np.isin(px_sraerosol_f, sr_clear_aerosol).astype(np.int16)
                 # create mask
                 mask = px_qa_fm * px_sraerosol_fm
-            else:
-                mask = px_qa_fm
+            elif sensor == 'LT05':
+                px_aero_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()
+                px_aero_f[px_aero_f <= sr_clear_aerosol] = 1
+                px_aero_f[px_aero_f >= sr_clear_aerosol] = 0
+                mask = px_qa_fm * px_aero_f
             # import surface reflectance band
             bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read().astype(np.float32)
             # reassign reflectances outside of range bad values
