@@ -1,7 +1,7 @@
 # michmap
 
 
-This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.e., mask, mosaic, merge) Landsat ARD imagery from the [LP DAAC AppEEARS API](https://lpdaacsvc.cr.usgs.gov/appeears/). 
+This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.e., mask, mosaic, merge) Landsat ARD imagery from the [LP DAAC AppEEARS API](https://lpdaacsvc.cr.usgs.gov/appeears/). I originally wrote this to download a multi-year time series of Landsat and MODIS data for the state of Michigan but have generalized the code. See an example output below RGB (654) for all summertime imagery from 2019-20.
 
 **Geospatial Dependencies:**
 - Rasterio 
@@ -9,11 +9,14 @@ This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.
 - Geopandas
 - Note 1: If you don't have these, I recommend installing Rasterio first. Follow the instructions [here](https://rasterio.readthedocs.io/en/latest/installation.html)
 
-**Scripts are below:**
+
+
+
+##Scripts are below:
 
 *appeears_request.py:* Requests band-by-band data using a user-defined shapefile/bounding box. Requires:
 - time/space bounds (preferably a .shp)
-- a (free) NASA Earthdata account.  
+- a (free) NASA Earthdata account.
 
 *appeears_download.py:* Pings the AppEEARS API to see if the request is complete. Downloads imagery band by band.
 - Either manually retrieve the task ID from the request script, or download the \*request.json file from the AppEEARS platform. This script scrapes the JSON for the task ID and then calls the api to check done-ness. 
