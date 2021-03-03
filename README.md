@@ -11,9 +11,9 @@ An example Landsat 5 is below (left 543, right 321) from summertime imagery over
 
 >Rasterio, GDAL (>1.1), Geopandas
 
-### Scripts:
+# Scripts:
 
-#appeears_request.py
+### appeears_request.py
 
 *Requests band-by-band data from the [AppEEARS catalogue](https://lpdaacsvc.cr.usgs.gov/appeears/products) using a user-defined shapefile/bounding box.*
 
@@ -22,17 +22,25 @@ Requires:
 - a bounding box. Preferably a .shp, GeoJSON is fine too but [should be wgs-84](http://switchfromshapefile.org/). 
 - a (free) NASA Earthdata account.
 
-#**appeears_download.py** 
->*Pings the AppEEARS API to see if the request is complete. If complete, it downloads imagery band by band.*
+### appeears_download.py
+
+*Pings the AppEEARS API to see if the request is complete. If complete, it downloads imagery band by band.*
 
 Requires:
-- \*request.json file from the AppEEARS request. Note: You can either manually retrieve the task ID from the request, or download the \*request.json file from the AppEEARS platform (under "Explore" in your profile).
+- \*request.json file from the AppEEARS request. 
+- Note: You can either manually retrieve the task ID from the request, or download the \*request.json file from the AppEEARS platform (under "Explore" in your profile).
 
-**file_tester.py** *Tests each .tif file by loading it temporarally. Logs bad files into badfn.csv.*
+### file_tester.py 
+
+*Tests each .tif file by loading it temporarally. Logs bad files into badfn.csv.*
+
 - badfn.csv can be read by *appeears_download.py* to redownload corrupted files (set flag_REDOWNLOADBADFN = True).
 - note: if you are re-testing a batch of bad files, set flag_RETESTBADFN = True to only test the files in badfn.csv.
 
-**preprocessing_landsat.py** *Performs a suite of pre-processing steps (mask, mosaic, merge, average) on the downloaded imagery.*
+### preprocessing_landsat.py 
+
+*Performs a suite of pre-processing steps (mask, mosaic, merge, average) on the downloaded imagery.*
+
 - imagery is masked using the **PIXELQA** and **SRAEROSOLQA** (for LC08) and **PIXELQA** and **SRATMOSOPACITYQA** (for LT05) files. 
 - per-pixel reflectances are calculated as averages of unmasked pixels. 
 - we use the [LEDAPS](https://daac.ornl.gov/MODELS/guides/LEDAPS_V2.html) and [LaSRC](https://www.usgs.gov/media/files/landsat-8-collection-1-land-surface-reflectance-code-product-guide) recommended cutoffs from the ATB documents*.
@@ -42,4 +50,4 @@ Requires:
 
 ## Notes
 
-*We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.). test
+*We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.). 
