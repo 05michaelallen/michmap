@@ -8,17 +8,23 @@ An example Landsat 5 is below (left 543, right 321) from summertime imagery over
 ![link](./example_data/michmap_09-10_543_321_merge.jpg)
 
 **Geospatial Dependencies:**
+
 >Rasterio, GDAL (>1.1), Geopandas
 
-## Scripts are below:
+### Scripts:
 
-**appeears_request.py** *Requests band-by-band data from the [AppEEARS catalogue](https://lpdaacsvc.cr.usgs.gov/appeears/products) using a user-defined shapefile/bounding box.*
+#appeears_request.py
+
+*Requests band-by-band data from the [AppEEARS catalogue](https://lpdaacsvc.cr.usgs.gov/appeears/products) using a user-defined shapefile/bounding box.*
+
 Requires:
 - time bounds. The script uses *year* as a keyword (will generalize this soon), so preferrably a timeframe within a year.
 - a bounding box. Preferably a .shp, GeoJSON is fine too but [should be wgs-84](http://switchfromshapefile.org/). 
 - a (free) NASA Earthdata account.
 
-**appeears_download.py** *Pings the AppEEARS API to see if the request is complete. If complete, it downloads imagery band by band.*
+#**appeears_download.py** 
+>*Pings the AppEEARS API to see if the request is complete. If complete, it downloads imagery band by band.*
+
 Requires:
 - \*request.json file from the AppEEARS request. Note: You can either manually retrieve the task ID from the request, or download the \*request.json file from the AppEEARS platform (under "Explore" in your profile).
 
@@ -31,8 +37,9 @@ Requires:
 - per-pixel reflectances are calculated as averages of unmasked pixels. 
 - we use the [LEDAPS](https://daac.ornl.gov/MODELS/guides/LEDAPS_V2.html) and [LaSRC](https://www.usgs.gov/media/files/landsat-8-collection-1-land-surface-reflectance-code-product-guide) recommended cutoffs from the ATB documents*.
 
->For LT05: AOD < 0.3, mask all cloud and cloud shadow. For LC08: Aerosol < High, mask all cloud and cloud shadow
+>For LT05: AOD < 0.3, mask all cloud and cloud shadow. 
+>For LC08: Aerosol < High, mask all cloud and cloud shadow
 
-### Notes
+## Notes
 
 *We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.). test
