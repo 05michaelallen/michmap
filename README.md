@@ -35,4 +35,4 @@ Requires:
 
 ### Notes
 
-*We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.).
+*We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.). test
