@@ -17,7 +17,7 @@ os.chdir(wd)
 clear_threshold = 10000
 flag_MANUALDROPS = False # if we have a manual drop file 
 scalefactor = 10000
-years = [2009]
+years = [2000]
 # initialize bands
 bands = [
     'SRB1', 

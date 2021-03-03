@@ -13,7 +13,7 @@ import pandas as pd
 from datetime import datetime
 
 # flags
-flag_RETESTBADFN = False
+flag_RETESTBADFN = True
 
 # =============================================================================
 # functions
@@ -63,7 +63,7 @@ def generate_fn_list(year, sensor, clear_threshold):
 wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 2016
+year = 1999
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
