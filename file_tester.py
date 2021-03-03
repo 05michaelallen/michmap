@@ -13,7 +13,7 @@ import pandas as pd
 from datetime import datetime
 
 # flags
-flag_RETESTBADFN = True
+flag_RETESTBADFN = False
 
 # =============================================================================
 # functions
@@ -63,7 +63,7 @@ def generate_fn_list(year, sensor, clear_threshold):
 wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 1990
+year = 2016
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"
@@ -121,12 +121,12 @@ for f in fn:
     print("file: " + str(f))
     # import pixelqa, aerosol/optical thickness
     try: 
-        px_qa_f = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
+        rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_PIXELQA_doy" + str(f) + "_aid0001.tif").read()    
     except:
         badfn.append("_PIXELQA_doy" + str(f))
         print("bad qa band")
     try:
-        aerosol = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()    
+        rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + aerosol_prefix + "_doy" + str(f) + "_aid0001.tif").read()    
     except:
         badfn.append("_" + aerosol_prefix + "_doy" + str(f))
         print("bad aerosol band")
@@ -134,7 +134,7 @@ for f in fn:
     for b in range(len(bands)):
         print("band: " + bands[b])
         try:
-            bf = rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
+            rio.open("../data/" + str(year) + "/CU_" + sensor + ".001_" + bands[b] + "_doy" + str(f) + "_aid0001.tif").read()
         except:
             badfn.append("_" + bands[b] + "_doy" + str(f))
             print("bad band")
