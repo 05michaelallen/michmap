@@ -1,14 +1,16 @@
 # michmap
 
 
-This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.e., mask, mosaic, merge) Landsat ARD imagery from the [LP DAAC AppEEARS API](https://lpdaacsvc.cr.usgs.gov/appeears/). I originally wrote this to download a multi-year time series of ARD Landsat and MODIS surface reflectances to [track drought impacts on urban vegetation in Los Angeles](https://www.sciencedirect.com/science/article/abs/pii/S2212095520306829). I have since generalized the code.
+This is a set of scripts to *request*, *download*, *test*, and *pre-process* (i.e., mask, mosaic, merge) Landsat ARD imagery from the [LP DAAC AppEEARS API](https://lpdaacsvc.cr.usgs.gov/appeears/). I originally wrote this to download a multi-year time series of ARD Landsat and MODIS surface reflectances to [track drought impacts on urban vegetation in Los Angeles](https://www.sciencedirect.com/science/article/abs/pii/S2212095520306829). I have since generalized the code. 
+
+An example Landsat 5 is below (left 543, right 321) from summertime imagery over 2009-2010. 
 
 ![link](./example_data/michmap_09-10_543_321_merge.jpg)
 
 **Geospatial Dependencies:**
-  Rasterio
-  GDAL (>1.1)
-  Geopandas
+> Rasterio
+> GDAL (>1.1)
+> Geopandas
 
 ## Scripts are below:
 
@@ -31,8 +33,9 @@ Requires:
 - per-pixel reflectances are calculated as averages of unmasked pixels. 
 - we use the [LEDAPS](https://daac.ornl.gov/MODELS/guides/LEDAPS_V2.html) and [LaSRC](https://www.usgs.gov/media/files/landsat-8-collection-1-land-surface-reflectance-code-product-guide) recommended cutoffs from the ATB documents*.
 
-  For LT05: AOD < 0.3, mask all cloud and cloud shadow
-  For LC08: Aerosol < High, mask all cloud and cloud shadow
+> For LT05: AOD < 0.3, mask all cloud and cloud shadow
+> For LC08: Aerosol < High, mask all cloud and cloud shadow
 
+### Notes
 
 *We did some sensitivity testing and these values appear appropriate in most cases. We do see occasional aerosol and thin cloud intrusion. These are the best values we found to optimize cloud detection vs. false positives (e.g., bright urban cover, sand, etc.).
