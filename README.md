@@ -8,9 +8,7 @@ An example Landsat 5 is below (left 543, right 321) from summertime imagery over
 ![link](./example_data/michmap_09-10_543_321_merge.jpg)
 
 **Geospatial Dependencies:**
->Rasterio
->GDAL (>1.1)
->Geopandas
+>Rasterio, GDAL (>1.1), Geopandas
 
 ## Scripts are below:
 
@@ -33,8 +31,7 @@ Requires:
 - per-pixel reflectances are calculated as averages of unmasked pixels. 
 - we use the [LEDAPS](https://daac.ornl.gov/MODELS/guides/LEDAPS_V2.html) and [LaSRC](https://www.usgs.gov/media/files/landsat-8-collection-1-land-surface-reflectance-code-product-guide) recommended cutoffs from the ATB documents*.
 
->For LT05: AOD < 0.3, mask all cloud and cloud shadow
->For LC08: Aerosol < High, mask all cloud and cloud shadow
+>For LT05: AOD < 0.3, mask all cloud and cloud shadow. For LC08: Aerosol < High, mask all cloud and cloud shadow
 
 ### Notes
 
