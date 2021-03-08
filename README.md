@@ -45,7 +45,7 @@ Requires:
 - per-pixel reflectances are calculated as averages of unmasked pixels. 
 - we use the [LEDAPS](https://daac.ornl.gov/MODELS/guides/LEDAPS_V2.html) and [LaSRC](https://www.usgs.gov/media/files/landsat-8-collection-1-land-surface-reflectance-code-product-guide) recommended cutoffs from the ATB documents*.
 
->For LT05: AOD < 0.3, mask all cloud and cloud shadow. \n
+>For LT05: AOD < 0.3, mask all cloud and cloud shadow. 
 >For LC08: Aerosol < High, mask all cloud and cloud shadow.
 
 ## Notes
