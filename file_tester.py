@@ -63,7 +63,7 @@ def generate_fn_list(year, sensor, clear_threshold):
 wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 clear_threshold = 10000
-year = 1999
+year = 2016
 # specify sensor prefix
 if year < 2013:
     sensor = "LT05"

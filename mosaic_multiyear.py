@@ -28,7 +28,7 @@ wd = "/media/vegveg/bedlam/michmap/michmap/"
 os.chdir(wd)
 
 # years to merge
-years = [2004, 2005]
+years = [1999, 2000]
 
 # initialize bands
 bands = [
@@ -63,5 +63,5 @@ else:
         out_mean[out_mean < 0] = -9999
         
         # output 
-        with rio.open("../data/" + b + "_" + str(years[0]) + "_" + str(years[1]) + ".tif", 'w', **out_meta) as dst:
+        with rio.open("../data/" + str(years[0]) + "_" + str(years[1]) + "_" + b + ".tif", 'w', **out_meta) as dst:
             dst.write(out_mean)
